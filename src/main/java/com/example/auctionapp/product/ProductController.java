@@ -34,7 +34,7 @@ public class ProductController {
 
     @ApiOperation(value = "Create new Product",
             notes = "Require admin credentials to be able to create new Product; " +
-                    "Admin credentials are stroed in encrypted properties")
+                    "Admin credentials are stored in encrypted properties")
     @PostMapping
     public ResponseEntity<?> createProduct(@RequestBody ProductDTO newProduct) throws Exception{
         service.createNewProduct(newProduct);
