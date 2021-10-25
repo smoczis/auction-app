@@ -6,6 +6,7 @@ import com.example.auctionapp.exception.NoSuchUserException;
 import com.example.auctionapp.userAuction.UserAuction;
 import com.example.auctionapp.userAuction.UserAuctionService;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,11 +35,20 @@ public class UserController {
         this.userService = userService;
     }
 
+    @ApiOperation(value = "Get all users",
+            notes = "Helper method for reminding userToken",
+            response = UserResponse.class)
     @GetMapping
     public ResponseEntity<?> getAllUsers() {
         return ResponseEntity.ok(userService.findAll().stream().map(u -> createResponse(u.getUsername())));
     }
 
+    @ApiOperation(value = "Create new user",
+            notes = "For creating new users with unique username")
+    @ApiResponses({
+            @ApiResponse(code = 200, message = "OK", response = UserResponse.class),
+            @ApiResponse(code = 400, message = "BAD_REQUEST", response = ErrorDetails.class),
+    })
     @PostMapping
     public ResponseEntity<?> createAuthToken(@RequestBody UserDTO user) throws Exception {
         userService.save(user);
@@ -48,9 +58,9 @@ public class UserController {
     @ApiOperation(value = "Get balance for user",
             notes = "User is being retrieved from db based on user token",
             response = UserResponse.class)
-    @GetMapping("{id}/balance")
-    public ResponseEntity<?> getUserBalance(@PathVariable String id) throws NoSuchUserException {
-        return ResponseEntity.ok(createResponse(userService.findUserById(id).getUsername()));
+    @GetMapping("{userToken}/balance")
+    public ResponseEntity<?> getUserBalance(@PathVariable String userToken) throws NoSuchUserException {
+        return ResponseEntity.ok(createResponse(userService.findUserById(userToken).getUsername()));
     }
 
     @ApiOperation(value = "Deposit BIDs for user",
@@ -60,9 +70,9 @@ public class UserController {
             @ApiResponse(code = 200, message = "OK", response = UserResponse.class),
             @ApiResponse(code = 400, message = "BAD_REQUEST", response = ErrorDetails.class),
     })
-    @PutMapping("{id}/balance")
-    public ResponseEntity<?> depositBidsForUser(@PathVariable String id, @RequestBody Integer bids) throws NoSuchUserException {
-        User user = userService.findUserById(id);
+    @PutMapping("{userToken}/balance")
+    public ResponseEntity<?> depositBidsForUser(@PathVariable String userToken, @RequestBody Integer bids) throws NoSuchUserException {
+        User user = userService.findUserById(userToken);
         userService.updateUserBalance(user.getUsername(), bids);
         return ResponseEntity.ok(createResponse(user.getUsername()));
     }
@@ -70,9 +80,9 @@ public class UserController {
     @ApiOperation(value = "Get auctions for user",
             notes = "Retrieve all auctions for given userToken; " +
                     "Auctions are ordered by time to finish; Returns custom response")
-    @GetMapping("/{id}/auctions")
-    public ResponseEntity<?> getAuctionsForUser(@PathVariable String id) throws NoSuchUserException {
-        User user = userService.findUserById(id);
+    @GetMapping("/{userToken}/auctions")
+    public ResponseEntity<?> getAuctionsForUser(@PathVariable String userToken) throws NoSuchUserException {
+        User user = userService.findUserById(userToken);
         return ResponseEntity.ok(user.getUserAuctions().stream()
                 .sorted(Comparator.comparing(UserAuction::getOffered))
                 .map(a -> uaService.createAuctionResponse(a.getAuction())));
@@ -81,11 +91,11 @@ public class UserController {
     @ApiOperation(value = "Get won auctions for user",
             notes = "Retrieve all finished auctions won by user; " +
                     "Auctions are ordered by time to finish; Returns custom response")
-    @GetMapping("/{id}/auctions/won")
-    public ResponseEntity<?> getWonAuctions(@PathVariable String id) throws NoSuchUserException {
-        User user = userService.findUserById(id);
+    @GetMapping("/{userToken}/auctions/won")
+    public ResponseEntity<?> getWonAuctions(@PathVariable String userToken) throws NoSuchUserException {
+        User user = userService.findUserById(userToken);
         return ResponseEntity.ok(user.getUserAuctions().stream()
-                .filter(ua -> ua.getUser().getId().equals(id) && ua.getAuction().getStatus() == AuctionStatus.FINISHED)
+                .filter(ua -> ua.getUser().getId().equals(userToken) && ua.getAuction().getStatus() == AuctionStatus.FINISHED)
                 .sorted(Comparator.comparing(UserAuction::getOffered))
                 .map(a -> uaService.createAuctionResponse(a.getAuction())));
     }

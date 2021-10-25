@@ -1,5 +1,10 @@
 package com.example.auctionapp.config;
 
+import com.example.auctionapp.auction.AuctionDTO;
+import com.example.auctionapp.exception.ErrorDetails;
+import com.example.auctionapp.product.ProductDTO;
+import com.example.auctionapp.user.UserDTO;
+import com.example.auctionapp.user.UserResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
@@ -32,12 +37,9 @@ public class SwaggerConfig {
     public Docket api() {
         return new Docket(DocumentationType.SWAGGER_2)
                 .select()
-                .apis(RequestHandlerSelectors.any())
+                .apis(RequestHandlerSelectors.basePackage("com.example.auctionapp"))
                 .paths(PathSelectors.any())
                 .build()
-//                .securityContexts(List.of(securityContext()))
-//                .securitySchemes(List.of(apiKey()))
-//                .useDefaultResponseMessages(false)
                 .apiInfo(info());
     }
 
