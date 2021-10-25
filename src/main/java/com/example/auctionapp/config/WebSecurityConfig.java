@@ -1,34 +1,30 @@
 package com.example.auctionapp.config;
 
+import org.jasypt.encryption.StringEncryptor;
+import org.jasypt.encryption.pbe.PooledPBEStringEncryptor;
+import org.jasypt.encryption.pbe.config.SimpleStringPBEConfig;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Configuration
 @EnableWebSecurity
-@EnableGlobalMethodSecurity(prePostEnabled = true)
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
-    private final JwtAuthenticationEntryPoint entryPoint;
-    private final JwtRequestFilter filter;
+    private final AdminCredentialsService adminService;
 
     @Autowired
-    public WebSecurityConfig(JwtAuthenticationEntryPoint authEntryPoint, JwtRequestFilter requestFilter) {
-        this.entryPoint = authEntryPoint;
-        this.filter = requestFilter;
-    }
-
-    @Bean
-    @Override
-    public AuthenticationManager authenticationManagerBean() throws Exception {
-        return super.authenticationManagerBean();
+    public WebSecurityConfig(AdminCredentialsService service) {
+        this.adminService = service;
     }
 
     @Override
@@ -37,12 +33,25 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .cors()
                 .and()
                 .csrf().disable()
-                .authorizeRequests().antMatchers("/register", "/h2/console/**").permitAll()
-                .anyRequest().authenticated()
+                .authorizeRequests()
+                .antMatchers(HttpMethod.POST, "/products").hasRole("admin")
                 .and()
-                .exceptionHandling().authenticationEntryPoint(entryPoint)
+                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
-                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
-        http.addFilterBefore(filter, UsernamePasswordAuthenticationFilter.class);
+                .httpBasic();
+    }
+
+    @Autowired
+    protected void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
+        auth.inMemoryAuthentication()
+                .passwordEncoder(passwordEncoder())
+                .withUser(adminService.getAdminName())
+                .password(adminService.getPassword())
+                .roles("admin");
+    }
+
+    @Bean
+    PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 }

@@ -1,6 +1,5 @@
 package com.example.auctionapp.exception;
 
-import com.example.auctionapp.user.UserAlreadyExistsException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -12,8 +11,11 @@ import java.util.Date;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(UserAlreadyExistsException.class)
-    public ResponseEntity<?> userAlreadyExistsException(UserAlreadyExistsException ex, WebRequest request) {
+    @ExceptionHandler(
+            {UserAlreadyExistsException.class, ProductAlreadyExistsException.class,
+                    NoSuchUserException.class, UserAlreadyWinningException.class,
+                    AuctionAlreadyFinishedException.class})
+    public ResponseEntity<?> userAlreadyExistsException(Exception ex, WebRequest request) {
         ErrorDetails details = new ErrorDetails(new Date(), ex.getMessage(), request.getDescription(false));
         return new ResponseEntity<>(details, HttpStatus.BAD_REQUEST);
     }
@@ -22,6 +24,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<?> resourceNotFoundException(ResourceNotFoundException ex, WebRequest request) {
         ErrorDetails details = new ErrorDetails(new Date(), ex.getMessage(), request.getDescription(false));
         return new ResponseEntity<>(details, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(NoSufficientBidsException.class)
+    public ResponseEntity<?> paymentRequiredException(NoSufficientBidsException ex, WebRequest request) {
+        ErrorDetails details = new ErrorDetails(new Date(), ex.getMessage(), request.getDescription(false));
+        return new ResponseEntity<>(details, HttpStatus.PAYMENT_REQUIRED);
     }
 
     @ExceptionHandler(Exception.class)

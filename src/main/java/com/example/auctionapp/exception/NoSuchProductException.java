@@ -1,14 +1,14 @@
-package com.example.auctionapp.user;
+package com.example.auctionapp.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 @ResponseStatus(value = HttpStatus.BAD_REQUEST)
-public class UserAlreadyExistsException extends Exception {
+public class NoSuchProductException extends Exception {
 
     private static final long serialVersionUID = 1L;
 
-    public UserAlreadyExistsException(String message) {
+    public NoSuchProductException(String message) {
         super(message);
     }
 }
