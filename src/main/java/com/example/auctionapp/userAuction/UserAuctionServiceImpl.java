@@ -89,5 +89,6 @@ public class UserAuctionServiceImpl implements UserAuctionService {
         } else {
             auction.setStatus(AuctionStatus.IN_PROGRESS);
         }
+        auctionService.save(auction);
     }
 }

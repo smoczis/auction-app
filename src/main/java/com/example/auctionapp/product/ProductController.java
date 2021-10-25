@@ -1,6 +1,7 @@
 package com.example.auctionapp.product;
 
 import com.example.auctionapp.aggregate.AggregateService;
+import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,11 +25,16 @@ public class ProductController {
         this.service = service;
     }
 
+    @ApiOperation(value = "List all products",
+            notes = "Get all products")
     @GetMapping
     public ResponseEntity<?> getProducts() {
         return ResponseEntity.ok(service.getAllProducts().stream().map(this::createNewProductResponse).collect(Collectors.toList()));
     }
 
+    @ApiOperation(value = "Create new Product",
+            notes = "Require admin credentials to be able to create new Product; " +
+                    "Admin credentials are stroed in encrypted properties")
     @PostMapping
     public ResponseEntity<?> createProduct(@RequestBody ProductDTO newProduct) throws Exception{
         service.createNewProduct(newProduct);
